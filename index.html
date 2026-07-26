@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Email Builder - Pure HTML</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body { margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+      .canvas-item {
+        position: relative;
+        cursor: move;
+        border: 2px solid transparent;
+        transition: all 0.2s;
+      }
+      .canvas-item:hover {
+        border-color: #818cf8;
+      }
+      .canvas-item.selected {
+        border-color: #4f46e5;
+        box-shadow: 0 0 0 4px #eef2ff;
+      }
+      .canvas-item .delete-btn {
+        display: none;
+        position: absolute;
+        top: -10px;
+        right: -10px;
+        background: #ef4444;
+        color: white;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        cursor: pointer;
+        border: none;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        line-height: 1;
+        z-index: 10;
+      }
+      .canvas-item.selected .delete-btn,
+      .canvas-item:hover .delete-btn {
+        display: flex;
+      }
+      .drag-over {
+        background-color: #eef2ff;
+        border: 2px dashed #4f46e5 !important;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50 h-screen w-full flex flex-col font-sans text-gray-800 overflow-hidden">
+    <!-- Navbar -->
+    <header class="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-6 shrink-0">
+      <div class="flex items-center space-x-3">
+        <div class="w-8 h-8 bg-indigo-600 rounded flex items-center justify-center text-white font-bold">M</div>
+        <span class="font-semibold text-lg tracking-tight">MailCraft Studio</span>
+      </div>
+      <div class="flex items-center space-x-2 bg-gray-100 p-1 rounded-lg">
+        <button id="btn-desktop" class="px-3 py-1 bg-white shadow-sm rounded-md text-xs font-medium text-gray-700 transition-colors">Desktop View</button>
+        <button id="btn-mobile" class="px-3 py-1 text-xs font-medium text-gray-500 hover:text-gray-700 transition-colors bg-transparent">Mobile Preview</button>
+      </div>
+      <div class="flex items-center space-x-3">
+        <input type="file" id="input-import-json" accept=".json" class="hidden" />
+        <button id="btn-import-json" class="px-4 py-1.5 border border-gray-300 text-sm font-medium rounded-md bg-white hover:bg-gray-50 transition-colors">Import JSON</button>
+        <button id="btn-export-json" class="px-4 py-1.5 border border-gray-300 text-sm font-medium rounded-md bg-white hover:bg-gray-50 transition-colors">Export JSON</button>
+        <button id="btn-export-html" class="px-4 py-1.5 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 transition-colors shadow-sm">Generate HTML</button>
+      </div>
+    </header>
+
+    <!-- Main Layout -->
+    <div class="flex-1 flex overflow-hidden">
+      
+      <!-- Left Sidebar: Elements -->
+      <aside class="w-64 bg-white border-r border-gray-200 flex flex-col shrink-0">
+        <div class="p-4 border-b border-gray-100">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-4">Content Blocks</h3>
+          <div class="grid grid-cols-2 gap-3" id="sidebar-blocks">
+            <div class="drag-item p-3 border border-gray-200 rounded-lg flex flex-col items-center hover:border-indigo-400 cursor-move transition-colors bg-white" draggable="true" data-type="heading">
+              <div class="w-6 h-6 mb-2 text-gray-400"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg></div>
+              <span class="text-xs text-center">Heading</span>
+            </div>
+            <div class="drag-item p-3 border border-gray-200 rounded-lg flex flex-col items-center hover:border-indigo-400 cursor-move transition-colors bg-white" draggable="true" data-type="text">
+              <div class="w-6 h-6 mb-2 text-gray-400"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg></div>
+              <span class="text-xs text-center">Text</span>
+            </div>
+            <div class="drag-item p-3 border border-gray-200 rounded-lg flex flex-col items-center hover:border-indigo-400 cursor-move transition-colors bg-white" draggable="true" data-type="image">
+              <div class="w-6 h-6 mb-2 text-gray-400"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg></div>
+              <span class="text-xs text-center">Image</span>
+            </div>
+            <div class="drag-item p-3 border border-gray-200 rounded-lg flex flex-col items-center hover:border-indigo-400 cursor-move transition-colors bg-white" draggable="true" data-type="button">
+              <div class="w-6 h-6 mb-2 text-indigo-600"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"></path></svg></div>
+              <span class="text-xs text-center font-medium text-indigo-700">Button</span>
+            </div>
+            <div class="drag-item p-3 border border-gray-200 rounded-lg flex flex-col items-center hover:border-indigo-400 cursor-move transition-colors bg-white" draggable="true" data-type="divider">
+              <div class="w-6 h-6 mb-2 text-gray-400"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path></svg></div>
+              <span class="text-xs">Divider</span>
+            </div>
+            <div class="drag-item p-3 border border-gray-200 rounded-lg flex flex-col items-center hover:border-indigo-400 cursor-move transition-colors bg-white" draggable="true" data-type="columns">
+              <div class="w-6 h-6 mb-2 text-gray-400"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"></path></svg></div>
+              <span class="text-xs">Columns</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Center: Canvas Area -->
+      <section class="flex-1 bg-gray-100 flex justify-center p-8 overflow-y-auto transition-colors duration-300 relative" id="canvas-wrapper">
+        <div id="email-canvas" class="w-full max-w-2xl bg-white shadow-lg flex flex-col min-h-[800px] transition-all duration-300 mx-auto">
+          <!-- Render blocks here -->
+        </div>
+      </section>
+
+      <!-- Right Sidebar: Properties -->
+      <aside class="w-72 bg-white border-l border-gray-200 flex flex-col shrink-0" id="properties-panel">
+        <div class="flex border-b border-gray-200 shrink-0">
+          <button class="flex-1 py-3 text-xs font-bold border-b-2 border-indigo-600 text-indigo-600">PROPERTIES</button>
+        </div>
+        <div class="p-5 space-y-6 overflow-y-auto flex-1" id="properties-content">
+          <!-- Render properties here -->
+        </div>
+      </aside>
+
+    </div>
+    
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,8 @@
+{
+  "name": "Email Builder",
+  "description": "Drag-and-drop responsive email builder with HTML and JSON export.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
